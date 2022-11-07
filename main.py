@@ -3,7 +3,7 @@ import sys
 import csv
 import numpy
 from networkx.algorithms.flow import maximum_flow, minimum_cut
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 EQUIPO_1 = 'E1'
 EQUIPO_2 = 'E2'
