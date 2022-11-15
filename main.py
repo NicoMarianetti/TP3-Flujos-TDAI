@@ -1,13 +1,14 @@
 import networkx as nx
 import sys
 import csv
-import numpy
+# import numpy
 from networkx.algorithms.flow import maximum_flow, minimum_cut
 # import matplotlib.pyplot as plt
 
 EQUIPO_1 = 'E1'
 EQUIPO_2 = 'E2'
 PRIMO = "'"
+INF = 99999
 
 
 def generar_grafo_dirigido(path_archivo_tareas):
@@ -26,7 +27,8 @@ def generar_grafo_dirigido(path_archivo_tareas):
         nodo = row[0]
         nodo_prima = f"{nodo}{PRIMO}"
         G.add_edge(fuente, nodo, capacity=int(row[1]))
-        G.add_edge(nodo, nodo_prima, capacity=numpy.Inf)
+        # G.add_edge(nodo, nodo_prima, capacity=numpy.Inf)
+        G.add_edge(nodo, nodo_prima, capacity=INF)
         G.add_edge(nodo_prima, sumidero, capacity=int(row[2]))
         dependencias = row[3:]
 
