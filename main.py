@@ -1,9 +1,5 @@
-import networkx as nx
 import sys
 import csv
-# import numpy
-from networkx.algorithms.flow import maximum_flow, minimum_cut
-# import matplotlib.pyplot as plt
 
 EQUIPO_1 = 'E1'
 EQUIPO_2 = 'E2'
@@ -12,35 +8,112 @@ INF = 99999
 
 
 def generar_grafo_dirigido(path_archivo_tareas):
-    G = nx.DiGraph()
-
     file = open(path_archivo_tareas)
     csvreader = csv.reader(file)
+
+    grafo = Grafo(dirigido=True)
 
     fuente = EQUIPO_1
     sumidero = EQUIPO_2
 
-    G.add_node(fuente)
-    G.add_node(sumidero)
+    grafo.agregar_vertice(fuente)
+    grafo.agregar_vertice(sumidero)
 
     for row in csvreader:
         nodo = row[0]
         nodo_prima = f"{nodo}{PRIMO}"
-        G.add_edge(fuente, nodo, capacity=int(row[1]))
-        # G.add_edge(nodo, nodo_prima, capacity=numpy.Inf)
-        G.add_edge(nodo, nodo_prima, capacity=INF)
-        G.add_edge(nodo_prima, sumidero, capacity=int(row[2]))
+
+        grafo.agregar_vertice(nodo)
+        grafo.agregar_vertice(nodo_prima)
+
+        grafo.agregar_arista(fuente, nodo, int(row[1]))
+        grafo.agregar_arista(nodo, nodo_prima, INF)
+        grafo.agregar_arista(nodo_prima, sumidero, int(row[2]))
+
         dependencias = row[3:]
 
         for i, dependencia in enumerate(dependencias):
             if (i + 1) % 2 == 0:
                 nodo_dependiente = dependencias[i - 1]
                 nodo_prima_dependiente = f"{dependencias[i - 1]}{PRIMO}"
-                peso_dependencia = int(dependencias[i])
-                G.add_edge(nodo, nodo_prima_dependiente, capacity=peso_dependencia)
-                G.add_edge(nodo_dependiente, nodo_prima, capacity=peso_dependencia)
 
-    return G
+                grafo.agregar_vertice(nodo_dependiente)
+                grafo.agregar_vertice(nodo_prima_dependiente)
+
+                peso_dependencia = int(dependencias[i])
+
+                grafo.agregar_arista(nodo, nodo_prima_dependiente, peso_dependencia)
+                grafo.agregar_arista(nodo_dependiente, nodo_prima, peso_dependencia)
+
+    return grafo
+
+
+def minimum_cut(grafo):
+
+    caminoSaT = buscar_camino_SaT(grafo)
+    flujo = 0
+
+    while caminoSaT:
+        costo = buscar_cuello_botella(grafo, caminoSaT)
+        flujo += costo
+
+        # Actualizo grafo
+        rango = range(1, len(caminoSaT))
+        for i in rango:
+            nodo_inicial = caminoSaT[i - 1]
+            nodo_vecino = caminoSaT[i]
+            peso = grafo.peso_arista(nodo_inicial, nodo_vecino)
+            grafo.modificar_peso_arista(nodo_inicial, nodo_vecino, peso - costo)
+
+            peso = grafo.peso_arista(nodo_vecino, nodo_inicial)
+            grafo.modificar_peso_arista(nodo_vecino, nodo_inicial, peso + costo)
+
+        caminoSaT = buscar_camino_SaT(grafo)
+
+    return flujo, grafo
+
+
+def buscar_camino_SaT(grafo):
+
+    S = EQUIPO_1
+    T = EQUIPO_2
+
+    caminos = {S: []}
+    cola_a_procesar = [(S, S)]
+    visitados = {S: True}
+
+    while cola_a_procesar:
+        padre, vertice = cola_a_procesar.pop()
+        camino_previo = caminos[padre]
+        camino = camino_previo + [vertice]
+        caminos[vertice] = camino
+
+        for vecino in grafo.vertices_adyacentes(vertice):
+            if grafo.peso_arista(vertice, vecino) <= 0:
+                continue
+
+            if vecino == T:
+                return caminos[vertice] + [vecino]
+
+            if not visitados.get(vecino, False):
+                visitados[vecino] = True
+                cola_a_procesar.append((vertice, vecino))
+
+    return False
+
+
+def buscar_cuello_botella(grafo, camino):
+    rango = range(1, len(camino))
+    min_camino = INF
+
+    for i in rango:
+        nodo_inicial = camino[i - 1]
+        nodo_vecino = camino[i]
+        costo = grafo.peso_arista(nodo_inicial, nodo_vecino)
+        if costo < min_camino:
+            min_camino = costo
+
+    return min_camino
 
 
 def main():
@@ -51,54 +124,82 @@ def main():
     path_archivo_tareas = sys.argv[1]
 
     G = generar_grafo_dirigido(path_archivo_tareas)
-    costo_minimo, corte = minimum_cut(G, EQUIPO_1, EQUIPO_2)
+    costo_minimo, grafo = minimum_cut(G)
+
     tareas_equipo1, tareas_equipo2 = corte
 
     print('Costo minimo: ', costo_minimo)
     print('Equipo 1: ', [i for i in list(tareas_equipo2) if not i.endswith(PRIMO) and i != EQUIPO_2])
     print('Equipo 2: ', [i for i in list(tareas_equipo1) if not i.endswith(PRIMO) and i != EQUIPO_1])
-    # plot_graph(G, tareas_equipo2)
 
 
-def plot_graph(g, equipo_1, save=False, file_name=''):
-    pos = {}
+class Grafo:
+    def __init__(self, dirigido):
+        self.adyacentes = {}
+        self.vertices = 0
+        self.aristas = 0
+        self.es_dirigido = dirigido
 
-    labels = {node: node for node in g}
-    cont = (len(g.nodes()) - 2) / 4
-    y = 0
-    yprima = 0
+    def agregar_vertice(self, vertice):
+        if self.adyacentes.get(vertice, False):
+            return
+        self.vertices += 1
+        self.adyacentes[vertice] = self.adyacentes.get(vertice, {})
 
-    for nodo in g.nodes():
-        if not nodo.endswith(PRIMO) and nodo != EQUIPO_1 and nodo != EQUIPO_2:
-            pos[nodo] = [0.25, y]
-            y += cont/len(g.nodes())
-        if nodo.endswith(PRIMO):
-            pos[nodo] = [0.7, yprima]
-            yprima += cont/len(g.nodes())
+    def agregar_arista(self, vertice1, vertice2, peso):
+        if (not self.es_dirigido):
+            self.adyacentes[vertice2][vertice1] = peso
+        self.adyacentes[vertice1][vertice2] = peso
+        self.aristas += 1
 
-    pos[EQUIPO_1] = [0, 0.5]
-    pos[EQUIPO_2] = [1, 0.5]
+    def borrar_vertice(self, a_borrar):
+        self.vertices -= 1
+        del self.adyacentes[a_borrar]
+        for vertice in self.adyacentes.keys():
+            del self.adyacentes[vertice][a_borrar]
 
-    plt.figure(figsize=(5, 5))
-    plt.axis('off')
-    plt.title('Tareas alcanzadas por los equipos', fontdict={'fontsize': 13})
+    def borrar_arista(self, vertice1, vertice2):
+        if (not self.es_dirigido):
+            del self.adyacentes[vertice2][vertice1]
+        self.aristas -= 1
+        del self.adyacentes[vertice1][vertice2]
 
-    available_colors = {1: '#E9D758', 2: '#ff8552'}
+    def vertices_conectados(self, vertice1, vertice2):
+        for vertice in self.adyacentes[vertice1].keys():
+            if vertice == vertice2:
+                return True
+        return False
 
-    colors = [available_colors[2 if node in equipo_1 else 1] for node in g.nodes()]
+    def ver_si_exite_vertice(self, vert):
+        if vert in self.adyacentes.keys():
+            return True
+        return False
 
-    colors[0] = available_colors[2]
-    colors[1] = available_colors[1]
+    def peso_arista(self, vertice1, vertice2):
+        return self.adyacentes[vertice1].get(vertice2, 0)
 
-    nx.draw_networkx_labels(g, pos, labels=labels)
-    nx.draw_networkx_edge_labels(g, pos, edge_labels=nx.get_edge_attributes(g, 'capacity'), label_pos=0.8, font_color='red', font_size=8, font_weight='bold')
-    nx.draw_networkx_edges(g, pos, width=1, alpha=1)
-    nx.draw_networkx_nodes(g, pos, nodelist=g.nodes(), node_color=colors, alpha=1, node_size=300, linewidths=1)
+    def modificar_peso_arista(self, vertice1, vertice2, peso):
+        if not self.adyacentes[vertice1].get(vertice2, False):
+            self.agregar_arista(vertice1, vertice2, peso)
+        self.adyacentes[vertice1][vertice2] = peso
 
-    if save:
-        plt.savefig(file_name, format='svg', dpi=300)
+    def obtener_vertices(self):
+        claves = []
+        for vertice in self.adyacentes.keys():
+            claves.append(vertice)
+        return claves
 
-    plt.show()
+    def cantidad_de_vertices(self):
+        return self.vertices
+
+    def cantidad_de_aristas(self):
+        return self.aristas
+
+    def vertices_adyacentes(self, vertice):
+        vertices_adyacentes = []
+        for vert in self.adyacentes[vertice].keys():
+            vertices_adyacentes.append(vert)
+        return vertices_adyacentes
 
 
 main()
