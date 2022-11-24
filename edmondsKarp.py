@@ -42,7 +42,8 @@ class EdmondsKarp:
         while cola_a_procesar:
             padre, vertice = cola_a_procesar.pop()
             camino_previo = caminos[padre]
-            camino = camino_previo + [vertice]
+            camino_previo.append(vertice)
+            camino = camino_previo
             caminos[vertice] = camino
 
             for vecino in self.grafo.vertices_adyacentes(vertice):
@@ -50,7 +51,8 @@ class EdmondsKarp:
                     continue
 
                 if vecino == self.sumidero:
-                    return caminos[vertice] + [vecino]
+                    caminos[vertice].append(vecino)
+                    return caminos[vertice]
 
                 if not visitados.get(vecino, False):
                     visitados[vecino] = True
