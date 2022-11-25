@@ -35,7 +35,7 @@ class GrafoDeFlujoFactory:
                     grafo.agregar_vertice(tarea_dependiente)
                     grafo.agregar_vertice(tarea_prima_dependiente)
 
-                    peso_dependencia = int(dependencias[i])
+                    peso_dependencia = int(dependencia)
 
                     grafo.agregar_arista(tarea, tarea_prima_dependiente, peso_dependencia)
                     grafo.agregar_arista(tarea_dependiente, tarea_prima, peso_dependencia)
