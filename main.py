@@ -9,7 +9,6 @@ def main():
         sys.exit(1)
 
     path_archivo_tareas = sys.argv[1]
-
     grafo = GrafoDeFlujoFactory().generar_grafo_dirigido(path_archivo_tareas)
     costo_minimo, tareas_equipo1, tareas_equipo2 = EdmondsKarp(grafo, EQUIPO_1, EQUIPO_2).resolve()
 
