@@ -12,12 +12,15 @@ class GrafoDeFlujoFactory:
 
         grafo = Grafo(dirigido=True)
 
+        traduccion_primas = {}
+
         grafo.agregar_vertice(EQUIPO_1)
         grafo.agregar_vertice(EQUIPO_2)
 
         for row in csvreader:
             tarea = row[TAREA_INDEX]
             tarea_prima = f"{tarea}{PRIMO}"
+            traduccion_primas[tarea_prima] = tarea
             
             grafo.agregar_vertice(tarea)
             grafo.agregar_vertice(tarea_prima)
@@ -40,7 +43,7 @@ class GrafoDeFlujoFactory:
                     grafo.agregar_arista(tarea, tarea_prima_dependiente, peso_dependencia)
                     grafo.agregar_arista(tarea_dependiente, tarea_prima, peso_dependencia)
 
-        return grafo
+        return grafo, traduccion_primas
 
     def __es_costo_tarea(self, i):
         return (i + 1) % 2 == 0

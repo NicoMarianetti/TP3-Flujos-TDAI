@@ -1,13 +1,14 @@
 from constantes import INF
 from constantes import EQUIPO_1, EQUIPO_2, PRIMO
 
+
 class EdmondsKarp:
     def __init__(self, grafo, fuente, sumidero):
         self.grafo = grafo
         self.fuente = fuente
         self.sumidero = sumidero
 
-    def resolver(self):
+    def resolver(self, traduccion_nodos):
         caminoSaT = self.__buscar_camino_sat()
         flujo = 0
 
@@ -28,16 +29,14 @@ class EdmondsKarp:
 
             caminoSaT = self.__buscar_camino_sat()
 
-        tareas_equipo_1, tareas_equipo_2 = self.__obtener_tareas()
-       
+        tareas_equipo_1, tareas_equipo_2 = self.__obtener_tareas(traduccion_nodos)
 
         return flujo, tareas_equipo_1, tareas_equipo_2
-    
 
     def __buscar_camino_sat(self):
-        caminos = { self.fuente: [] }
-        cola_a_procesar = [ (self.fuente, self.fuente) ]
-        visitados = { self.fuente: True }
+        caminos = {self.fuente: []}
+        cola_a_procesar = [(self.fuente, self.fuente)]
+        visitados = {self.fuente: True}
 
         while cola_a_procesar:
             padre, vertice = cola_a_procesar.pop()
@@ -72,28 +71,28 @@ class EdmondsKarp:
 
         return min_camino
 
-    def __obtener_tareas(self):
+    def __obtener_tareas(self, traduccion_nodos):
         tareas_asignadas = {}
 
         caminos_equipo_1 = self.grafo.adyacentes[EQUIPO_1].keys()
 
         for tarea in caminos_equipo_1:
-            if(self.grafo.peso_arista(EQUIPO_1, tarea) == 0):
+            if self.grafo.peso_arista(EQUIPO_1, tarea) == 0:
                 tareas_asignadas[tarea] = EQUIPO_1
-        
+
         caminos_equipo_2 = self.grafo.adyacentes[EQUIPO_2].keys()
-        
+
         for tarea in caminos_equipo_2:
-            if(self.grafo.peso_arista(tarea, EQUIPO_2) == 0):
-                tarea_no_prima = tarea[:len(tarea) - len(PRIMO)]
-                if(not tareas_asignadas.get(tarea_no_prima, False)):
+            if self.grafo.peso_arista(tarea, EQUIPO_2) == 0:
+                tarea_no_prima = traduccion_nodos[tarea]
+                if not tareas_asignadas.get(tarea_no_prima, False):
                     tareas_asignadas[tarea_no_prima] = EQUIPO_2
-        
+
         tareas_equipo1 = []
         tareas_equipo2 = []
 
         for tarea, equipo in tareas_asignadas.items():
-            if(equipo == EQUIPO_1):
+            if equipo == EQUIPO_1:
                 tareas_equipo1.append(tarea)
             else:
                 tareas_equipo2.append(tarea)
