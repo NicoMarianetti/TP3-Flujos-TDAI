@@ -7,7 +7,7 @@ class EdmondsKarp:
         self.fuente = fuente
         self.sumidero = sumidero
 
-    def resolve(self):
+    def resolver(self):
         caminoSaT = self.__buscar_camino_sat()
         flujo = 0
 
@@ -73,26 +73,29 @@ class EdmondsKarp:
         return min_camino
 
     def __obtener_tareas(self):
-         # Obtengo las tareas que me da el corte minimo:
-        caminos_equipo_1 = self.grafo.adyacentes[EQUIPO_1].items()
-        caminos_equipo_2 = [c for c in list(self.grafo.adyacentes.items()) if c[0].endswith(PRIMO)]
+        tareas_asignadas = {}
+
+        caminos_equipo_1 = self.grafo.adyacentes[EQUIPO_1].keys()
+
+        for tarea in caminos_equipo_1:
+            if(self.grafo.peso_arista(EQUIPO_1, tarea) == 0):
+                tareas_asignadas[tarea] = EQUIPO_1
         
-        # Las tareas cuya capacidad desde el equipo 1 (fuente) sea 0 seran trabajados por el equipo 1
-        tareas_equipo_1 = list(
-            map(lambda c: c[0],
-                filter(lambda c: c[1] == 0, caminos_equipo_1)
-            )
-        )
+        caminos_equipo_2 = self.grafo.adyacentes[EQUIPO_2].keys()
+        
+        for tarea in caminos_equipo_2:
+            if(self.grafo.peso_arista(tarea, EQUIPO_2) == 0):
+                tarea_no_prima = tarea[:len(tarea) - len(PRIMO)]
+                if(not tareas_asignadas.get(tarea_no_prima, False)):
+                    tareas_asignadas[tarea_no_prima] = EQUIPO_2
+        
+        tareas_equipo1 = []
+        tareas_equipo2 = []
 
-        # Las tareas primadas cuya capacidad hacia el equipo 2 (sumidero) sean 0 seran tomadas por el equipo 2,
-        # a menos que hayan que hayan sido tomadas por el equipo 1
-        tareas_equipo_2 = list(
-            filter(
-                lambda c: c not in tareas_equipo_1,
-                map(lambda c: c[0].replace(PRIMO, ''),
-                    filter(lambda c: c[1][EQUIPO_2] == 0, caminos_equipo_2)
-                )
-            )
-        )
+        for tarea, equipo in tareas_asignadas.items():
+            if(equipo == EQUIPO_1):
+                tareas_equipo1.append(tarea)
+            else:
+                tareas_equipo2.append(tarea)
 
-        return tareas_equipo_1, tareas_equipo_2
+        return tareas_equipo1, tareas_equipo2
