@@ -12,16 +12,10 @@ class Grafo:
         self.adyacentes[vertice] = self.adyacentes.get(vertice, {})
 
     def agregar_arista(self, vertice1, vertice2, peso):
-        if (not self.es_dirigido):
+        if not self.es_dirigido:
             self.adyacentes[vertice2][vertice1] = peso
         self.adyacentes[vertice1][vertice2] = peso
         self.aristas += 1
-
-    def vertices_conectados(self, vertice1, vertice2):
-        for vertice in self.adyacentes[vertice1].keys():
-            if vertice == vertice2:
-                return True
-        return False
 
     def peso_arista(self, vertice1, vertice2):
         return self.adyacentes[vertice1].get(vertice2, 0)

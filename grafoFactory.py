@@ -1,6 +1,8 @@
 import csv
 from grafo import Grafo
-from constantes import EQUIPO_1, EQUIPO_2, PRIMO, INF, TAREA_INDEX, COSTO_EQUIPO_1_INDEX, COSTO_EQUIPO_2_INDEX, DEPENDENCIAS_INDEX
+from constantes import EQUIPO_1, EQUIPO_2, PRIMO, INF, TAREA_INDEX, COSTO_EQUIPO_1_INDEX, COSTO_EQUIPO_2_INDEX, \
+    DEPENDENCIAS_INDEX
+
 
 class GrafoDeFlujoFactory:
     def __init__(self):
@@ -21,7 +23,7 @@ class GrafoDeFlujoFactory:
             tarea = row[TAREA_INDEX]
             tarea_prima = f"{tarea}{PRIMO}"
             traduccion_primas[tarea_prima] = tarea
-            
+
             grafo.agregar_vertice(tarea)
             grafo.agregar_vertice(tarea_prima)
 
