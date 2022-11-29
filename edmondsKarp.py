@@ -28,8 +28,9 @@ class EdmondsKarp:
                 self.grafo.modificar_peso_arista(nodo_vecino, nodo_inicial, peso + costo)
 
             caminoSaT = self.__buscar_camino_sat()
-
-        tareas_equipo_1, tareas_equipo_2 = self.__obtener_tareas(traduccion_nodos)
+            
+        nodos_e1 = self.__corte_minimo(traduccion_nodos)
+        tareas_equipo_1, tareas_equipo_2 = self.__obtener_tareas(traduccion_nodos, nodos_e1)
 
         return flujo, tareas_equipo_1, tareas_equipo_2
 
@@ -71,22 +72,44 @@ class EdmondsKarp:
 
         return min_camino
 
-    def __obtener_tareas(self, traduccion_nodos):
+    def __corte_minimo(self, traduccion_nodos):
+        caminos_de_S = []
+        cola_a_procesar = [self.fuente]
+        visitados = {self.fuente: True}
+
+        while cola_a_procesar:
+            vertice = cola_a_procesar.pop()
+            caminos_de_S.append(vertice)
+
+            for vecino in self.grafo.vertices_adyacentes(vertice):
+
+                tarea_no_prima = traduccion_nodos.get(vecino, False)
+
+                if self.grafo.peso_arista(vertice, vecino) <= 0 or (vecino == tarea_no_prima and vertice != tarea_no_prima):
+                    continue
+                
+                if not visitados.get(vecino, False):
+                    visitados[vecino] = True
+                    cola_a_procesar.append( vecino )
+        
+        return caminos_de_S
+    
+    def __obtener_tareas(self, traduccion_nodos, nodos_e1):
         tareas_asignadas = {}
 
         caminos_equipo_1 = self.grafo.adyacentes[EQUIPO_1].keys()
 
         for tarea in caminos_equipo_1:
-            if self.grafo.peso_arista(EQUIPO_1, tarea) == 0:
-                tareas_asignadas[tarea] = EQUIPO_1
+            tareas_asignadas[tarea] = EQUIPO_1
 
-        caminos_equipo_2 = self.grafo.adyacentes[EQUIPO_2].keys()
+        for tarea in nodos_e1:
 
-        for tarea in caminos_equipo_2:
-            if self.grafo.peso_arista(tarea, EQUIPO_2) == 0:
-                tarea_no_prima = traduccion_nodos[tarea]
-                if not tareas_asignadas.get(tarea_no_prima, False):
-                    tareas_asignadas[tarea_no_prima] = EQUIPO_2
+            tarea = traduccion_nodos.get(tarea, tarea)
+
+            if tarea == EQUIPO_1:
+                continue
+            
+            tareas_asignadas[tarea] = EQUIPO_2
 
         tareas_equipo1 = []
         tareas_equipo2 = []
@@ -98,3 +121,4 @@ class EdmondsKarp:
                 tareas_equipo2.append(tarea)
 
         return tareas_equipo1, tareas_equipo2
+
