@@ -7,6 +7,7 @@ class EdmondsKarp:
         self.grafo = grafo
         self.fuente = fuente
         self.sumidero = sumidero
+        self.caminos_elegidos = []
 
     def resolver(self, traduccion_nodos):
         caminoSaT = self.__buscar_camino_sat()
@@ -14,6 +15,7 @@ class EdmondsKarp:
 
         while caminoSaT:
             costo = self.__buscar_cuello_botella(caminoSaT)
+            self.caminos_elegidos.append((costo,caminoSaT))
             flujo += costo
 
             # Actualizo grafo
@@ -104,9 +106,7 @@ class EdmondsKarp:
 
         for tarea in nodos_e1:
 
-            tarea = traduccion_nodos.get(tarea, tarea)
-
-            if tarea == EQUIPO_1:
+            if self.grafo.peso_arista(tarea, EQUIPO_1) == 0 or tarea == EQUIPO_1:
                 continue
             
             tareas_asignadas[tarea] = EQUIPO_2
