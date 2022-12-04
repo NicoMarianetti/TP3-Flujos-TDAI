@@ -106,7 +106,7 @@ class EdmondsKarp:
 
         for tarea in nodos_e1:
 
-            if self.grafo.peso_arista(tarea, EQUIPO_1) == 0 or tarea == EQUIPO_1:
+            if self.grafo.peso_arista( EQUIPO_1, tarea ) == 0 or tarea == EQUIPO_1:
                 continue
             
             tareas_asignadas[tarea] = EQUIPO_2

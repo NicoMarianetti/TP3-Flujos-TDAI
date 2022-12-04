@@ -29,6 +29,7 @@ class GrafoDeFlujoFactory:
 
             grafo.agregar_arista(EQUIPO_1, tarea, int(row[COSTO_EQUIPO_1_INDEX]))
             grafo.agregar_arista(tarea, tarea_prima, INF)
+            grafo.agregar_arista(tarea_prima, tarea, INF)
             grafo.agregar_arista(tarea_prima, EQUIPO_2, int(row[COSTO_EQUIPO_2_INDEX]))
 
             dependencias = row[DEPENDENCIAS_INDEX:]
