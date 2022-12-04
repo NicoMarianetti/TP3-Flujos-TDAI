@@ -43,7 +43,7 @@ class GrafoDeFlujoFactory:
                     peso_dependencia = int(dependencia)
 
                     grafo.agregar_arista(tarea, tarea_prima_dependiente, peso_dependencia)
-                    grafo.agregar_arista(tarea_dependiente, tarea_prima, peso_dependencia)
+                    grafo.agregar_arista(tarea_prima_dependiente, tarea_prima, peso_dependencia)
 
         return grafo, traduccion_primas
 
