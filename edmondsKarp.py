@@ -1,5 +1,6 @@
 from constantes import INF
 from constantes import EQUIPO_1, EQUIPO_2, PRIMO
+from collections import deque
 
 
 class EdmondsKarp:
@@ -31,18 +32,19 @@ class EdmondsKarp:
 
             caminoSaT = self.__buscar_camino_sat()
             
-        nodos_e1 = self.__corte_minimo(traduccion_nodos)
+        nodos_e1 = self.__corte_minimo()
         tareas_equipo_1, tareas_equipo_2 = self.__obtener_tareas(traduccion_nodos, nodos_e1)
 
         return flujo, tareas_equipo_1, tareas_equipo_2
 
     def __buscar_camino_sat(self):
         caminos = {self.fuente: []}
-        cola_a_procesar = [(self.fuente, self.fuente)]
+        cola_a_procesar = deque()
+        cola_a_procesar.append((self.fuente, self.fuente))
         visitados = {self.fuente: True}
 
         while cola_a_procesar:
-            padre, vertice = cola_a_procesar.pop()
+            padre, vertice = cola_a_procesar.popleft()
             nuevo_camino = caminos[padre].copy()
             nuevo_camino.append(vertice)
             caminos[vertice] = nuevo_camino
@@ -74,20 +76,19 @@ class EdmondsKarp:
 
         return min_camino
 
-    def __corte_minimo(self, traduccion_nodos):
+    def __corte_minimo(self):
         caminos_de_S = []
-        cola_a_procesar = [self.fuente]
+        cola_a_procesar = deque()
+        cola_a_procesar.append(self.fuente)
         visitados = {self.fuente: True}
 
         while cola_a_procesar:
-            vertice = cola_a_procesar.pop()
+            vertice = cola_a_procesar.popleft()
             caminos_de_S.append(vertice)
 
             for vecino in self.grafo.vertices_adyacentes(vertice):
 
-                tarea_no_prima = traduccion_nodos.get(vecino, False)
-
-                if self.grafo.peso_arista(vertice, vecino) <= 0 or (vecino == tarea_no_prima and vertice != tarea_no_prima):
+                if self.grafo.peso_arista(vertice, vecino) <= 0:
                     continue
                 
                 if not visitados.get(vecino, False):
@@ -101,15 +102,16 @@ class EdmondsKarp:
 
         caminos_equipo_1 = self.grafo.adyacentes[EQUIPO_1].keys()
 
-        for tarea in caminos_equipo_1:
-            tareas_asignadas[tarea] = EQUIPO_1
+        for tareas in caminos_equipo_1:
+            tareas_asignadas[tareas] = EQUIPO_1
 
         for tarea in nodos_e1:
-
-            if self.grafo.peso_arista( EQUIPO_1, tarea ) == 0 or tarea == EQUIPO_1:
+            if tarea == EQUIPO_1:
                 continue
-            
-            tareas_asignadas[tarea] = EQUIPO_2
+
+            nodo_traducido = traduccion_nodos.get(tarea, tarea)
+
+            tareas_asignadas[nodo_traducido] = EQUIPO_2
 
         tareas_equipo1 = []
         tareas_equipo2 = []
